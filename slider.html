@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zone Slider</title>
+<style>
+  :root {
+    --red: #e5484d;
+    --orange: #f5a524;
+    --green: #30a46c;
+    --thumb: 28px;
+    --track: 10px;
+  }
+
+  body {
+    margin: 0;
+    padding: 40px 16px;
+    font-family: "area-normal", "Area Normal", "Area", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fff;
+  }
+
+  .zone-slider {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .readout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .readout-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 125px;
+    height: 125px;
+    border-radius: 50%;
+    background: var(--zone-color);
+    color: #fff;
+    transition: background-color 0.15s;
+  }
+
+  .readout-circle:focus-within {
+    outline: 3px solid #6aa9ff;
+    outline-offset: 3px;
+  }
+
+  /* Typeable number field, styled to look like plain text inside the circle */
+  .readout-value {
+    width: 100px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 48px;
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+    caret-color: #fff;
+  }
+
+  .readout-value:focus {
+    outline: none;
+  }
+
+  .readout-label {
+    margin-top: 0;
+    font-size: 16px;
+  }
+
+  /* Track and ticks share this inset so they line up with the thumb's center */
+  .rail {
+    position: relative;
+    margin: 0 calc(var(--thumb) / 2);
+  }
+
+  .track {
+    position: relative;
+    height: var(--track);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .track .zones {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right,
+      var(--red) 0 var(--b1),
+      var(--orange) var(--b1) var(--b2),
+      var(--green) var(--b2) 100%);
+  }
+
+  /* Unfilled portion (right of the thumb) is shown faded */
+  .track .unfilled {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: var(--pct);
+    background: rgba(255, 255, 255, 0.65);
+  }
+
+  /* Native range input sits on top of the track for dragging + keyboard support */
+  .zone-slider input[type="range"] {
+    position: absolute;
+    left: calc(var(--thumb) / -2);
+    top: calc(var(--track) / 2 - var(--thumb) / 2);
+    width: calc(100% + var(--thumb));
+    height: var(--thumb);
+    margin: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .zone-slider input[type="range"]::-webkit-slider-runnable-track { background: transparent; height: var(--thumb); }
+  .zone-slider input[type="range"]::-moz-range-track { background: transparent; }
+
+  .zone-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: var(--thumb);
+    height: var(--thumb);
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #d0d0d0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .zone-slider input[type="range"]::-moz-range-thumb {
+    width: var(--thumb);
+    height: var(--thumb);
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #d0d0d0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+  }
+
+  .zone-slider input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 3px solid #6aa9ff; outline-offset: 2px; }
+  .zone-slider input[type="range"]:focus-visible::-moz-range-thumb { outline: 3px solid #6aa9ff; outline-offset: 2px; }
+
+  .ticks {
+    position: relative;
+    height: 44px;
+    margin-top: 14px;
+  }
+
+  .tick {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #9a9a9a;
+    font-size: 16px;
+  }
+
+  .tick::before {
+    content: "";
+    width: 2px;
+    height: 10px;
+    margin-bottom: 6px;
+    background: #c8c8c8;
+    border-radius: 1px;
+  }
+
+  /* Minor markers: shorter, lighter tick with a smaller label */
+  .tick.minor {
+    color: #c2c2c2;
+    font-size: 12px;
+  }
+
+  .tick.minor::before {
+    width: 1px;
+    height: 6px;
+    margin-bottom: 4px;
+    background: #dcdcdc;
+  }
+</style>
+</head>
+<body>
+
+<div class="zone-slider" id="zoneSlider">
+  <div class="readout">
+    <div class="readout-circle">
+      <input class="readout-value" id="readout" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-labelledby="readoutLabel">
+      <label class="readout-label" id="readoutLabel" for="readout">Flow Rate</label>
+    </div>
+  </div>
+  <div class="rail">
+    <div class="track">
+      <div class="zones"></div>
+      <div class="unfilled"></div>
+    </div>
+    <div class="ticks" id="ticks"></div>
+    <input type="range" id="zoneRange" min="0" max="320" step="1" value="160" aria-labelledby="readoutLabel">
+  </div>
+</div>
+
+<script>
+  (function () {
+    const MIN = 0;
+    const MAX = 320;
+    const TICKS = [0, 100, 200, 300];
+    const MINOR_TICKS = [160, 255];
+    // Upper bound (inclusive) of each zone
+    const ZONES = [
+      { max: 160, color: "var(--red)",    label: "red zone" },
+      { max: 255, color: "var(--orange)", label: "orange zone" },
+      { max: 320, color: "var(--green)",  label: "green zone" },
+    ];
+
+    const root = document.getElementById("zoneSlider");
+    const input = document.getElementById("zoneRange");
+    const readout = document.getElementById("readout");
+    const ticks = document.getElementById("ticks");
+
+    const pct = (v) => ((v - MIN) / (MAX - MIN)) * 100;
+
+    // Zone boundaries sit halfway between the last value of one zone and the first of the next
+    root.style.setProperty("--b1", pct(ZONES[0].max + 0.5) + "%");
+    root.style.setProperty("--b2", pct(ZONES[1].max + 0.5) + "%");
+
+    function addTick(v, className) {
+      const t = document.createElement("div");
+      t.className = className;
+      t.style.left = pct(v) + "%";
+      t.textContent = v;
+      ticks.appendChild(t);
+    }
+
+    TICKS.forEach((v) => addTick(v, "tick"));
+    MINOR_TICKS.forEach((v) => addTick(v, "tick minor"));
+
+    // Redraws the track and circle color; also rewrites the typed box unless the user is mid-typing
+    function update({ syncReadout = true } = {}) {
+      const v = Number(input.value);
+      const zone = ZONES.find((z) => v <= z.max);
+      root.style.setProperty("--pct", pct(v) + "%");
+      root.style.setProperty("--zone-color", zone.color);
+      if (syncReadout) readout.value = v;
+      input.setAttribute("aria-valuetext", `${v}, ${zone.label}`);
+    }
+
+    // Slider -> circle
+    input.addEventListener("input", () => update());
+
+    // Circle -> slider: move the slider live as digits are typed
+    readout.addEventListener("input", () => {
+      readout.value = readout.value.replace(/\D/g, "");
+      if (readout.value === "") return;
+      const v = Math.min(MAX, Math.max(MIN, Number(readout.value)));
+      input.value = v;
+      update({ syncReadout: false });
+    });
+
+    // When done typing, clamp to the range (or restore the last value if left empty)
+    function commit() {
+      update();
+    }
+    readout.addEventListener("blur", commit);
+    readout.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        commit();
+        readout.blur();
+      } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault();
+        input.value = Number(input.value) + (e.key === "ArrowUp" ? 1 : -1);
+        update();
+      }
+    });
+    readout.addEventListener("focus", () => readout.select());
+
+    update();
+  })();
+</script>
+
+</body>
+</html>
