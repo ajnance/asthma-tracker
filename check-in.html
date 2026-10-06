@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Check-in · Asthma Action Tracker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="components/user-selector.css">
+<link rel="stylesheet" href="components/zone-slider.css">
+<link rel="stylesheet" href="components/bottom-nav.css">
+<style>
+  :root {
+    --ink: #000;
+    --ink-field: #1b1f27;
+    --line: #a4a4a4;
+    --line-soft: #c3c3c3;
+    --fill-soft: #f7f7f7;
+    --fill-btn: #e9e9e9;
+    --fill-selected: #f4f4f4;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "area-normal", "Area Normal", "Area", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fff;
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  button, input, textarea { font: inherit; color: inherit; }
+
+  .check-in {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 0 calc(64px + var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* ---- Header: title, child, flow rate, date ---- */
+  .intro {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .app-title {
+    margin: 0;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+  }
+
+  .section {
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .intro .section { gap: 8px; }
+
+  /* Components center themselves with auto margins, which opts out of flex stretch */
+  .check-in .user-selector,
+  .check-in .zone-slider { width: 100%; }
+
+  /* ---- Date field ---- */
+  .field-label {
+    color: var(--ink-field);
+    font-size: 16px;
+    line-height: 19.2px;
+  }
+
+  .date-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(27, 31, 39, 0.16);
+    border-radius: 2px;
+    background: #fff;
+  }
+
+  .date-field:focus-within {
+    outline: 3px solid #6aa9ff;
+    outline-offset: 2px;
+  }
+
+  .date-field input {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 12px 54px 12px 18px;
+    border: 0;
+    background: transparent;
+    color: var(--ink-field);
+    font-size: 20px;
+    line-height: 24px;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: left;
+  }
+
+  .date-field input:focus { outline: none; }
+  .date-field input::-webkit-date-and-time-value { text-align: left; }
+
+  /* Stretch the native picker trigger over the whole field so any tap opens it */
+  .date-field input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .date-field .fa-calendar {
+    position: absolute;
+    right: 18px;
+    font-size: 20px;
+    color: var(--ink-field);
+    pointer-events: none;
+  }
+
+  /* ---- Section headings ---- */
+  .section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .section-head h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 400;
+  }
+
+  .section-head p,
+  .section-head .hint {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  /* A legend isn't a flex item, so it takes the section gap as a margin */
+  legend.section-head { padding: 0; width: 100%; margin-bottom: 16px; }
+
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  /* ---- Options: checkbox / radio inputs styled as rows and tiles ---- */
+  .option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .option span {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.12s, box-shadow 0.12s;
+  }
+
+  .option input:checked + span {
+    background: var(--fill-selected);
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+
+  .option input:focus-visible + span {
+    outline: 3px solid #6aa9ff;
+    outline-offset: 2px;
+  }
+
+  .option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .option-list .option span {
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 16px;
+  }
+
+  .option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .option-grid .option span {
+    min-height: 55px;
+    padding: 8px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .option-grid .option i,
+  .option-grid .option svg {
+    font-size: 16px;
+    width: 1em;
+    height: 1em;
+  }
+
+  /* ---- Add buttons ---- */
+  .add-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .add-button .circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--fill-btn);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .add-button:focus-visible .circle {
+    outline: 3px solid #6aa9ff;
+    outline-offset: 2px;
+  }
+
+  /* ---- Notes ---- */
+  .new-note {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--line-soft);
+    background: var(--fill-soft);
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .new-note:focus-visible {
+    outline: 3px solid #6aa9ff;
+    outline-offset: 2px;
+  }
+
+  /* ---- Footer ---- */
+  .page-footer {
+    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  /* ---- Action bar: fixed above the bottom nav once the check-in has data ---- */
+  :root { --action-bar-height: 60px; }
+
+  body.has-actions .check-in {
+    padding-bottom: calc(64px + var(--action-bar-height) + var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  }
+
+  .action-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    z-index: 999;
+    background: #fff;
+  }
+
+  .action-bar[hidden] { display: none; }
+
+  .action-bar-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 480px;
+    height: var(--action-bar-height);
+    margin: 0 auto;
+    padding: 8px 16px;
+  }
+
+  .pill-button {
+    height: 44px;
+    padding: 6px 8px;
+    border: 1px solid #c1c1c1;
+    border-radius: 30px;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pill-button:focus-visible {
+    outline: 3px solid #6aa9ff;
+    outline-offset: 2px;
+  }
+
+  .pill-button.icon-only { width: 44px; flex: none; }
+  .pill-button.primary { flex: 1; background: #eee; }
+
+  /* Brief confirmation after logging, in the action bar's spot */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 12px);
+    z-index: 999;
+    transform: translateX(-50%);
+    max-width: calc(100% - 32px);
+    padding: 10px 16px;
+    border-radius: 30px;
+    background: #1b1f27;
+    color: #fff;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .toast[hidden] { display: none; }
+
+  /* ---- Switch-user confirmation ---- */
+  .confirm-dialog {
+    width: calc(100% - 32px);
+    max-width: 360px;
+    padding: 24px 16px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .confirm-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+
+  .confirm-dialog p {
+    margin: 0 0 20px;
+    font-size: 16px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .confirm-actions .pill-button { flex: 1; }
+  .confirm-actions .primary { background: #eee; }
+
+  .placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eee;
+    color: #888;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<main class="check-in">
+  <div class="intro">
+    <h1 class="app-title">Asthma Action Tracker</h1>
+
+    <!-- Design system: User Selector (components/user-selector.*) -->
+    <div class="user-selector">
+      <div class="user-track" id="userTrack" role="radiogroup" aria-label="Select child"></div>
+      <div class="user-name" id="userName" aria-live="polite"></div>
+    </div>
+
+    <!-- Design system: Zone Slider (components/zone-slider.*) -->
+    <div class="section">
+      <div class="zone-slider" id="flowRate"></div>
+    </div>
+
+    <div class="section">
+      <label class="field-label" for="checkInDate">Check-in Date</label>
+      <div class="date-field">
+        <input type="date" id="checkInDate" name="date">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+
+  <fieldset class="section">
+    <legend class="section-head">
+      <h2>Symptoms</h2>
+      <span class="hint">Select all that apply.</span>
+    </legend>
+    <div class="option-list">
+      <label class="option"><input type="checkbox" name="symptoms" value="chest-tightness"><span>Chest Tightness</span></label>
+      <label class="option"><input type="checkbox" name="symptoms" value="coughing"><span>Coughing</span></label>
+      <label class="option"><input type="checkbox" name="symptoms" value="difficulty-breathing"><span>Difficulty Breathing</span></label>
+      <label class="option"><input type="checkbox" name="symptoms" value="nighttime-awakeness"><span>Nighttime Awakeness</span></label>
+      <label class="option"><input type="checkbox" name="symptoms" value="wheezing"><span>Wheezing</span></label>
+    </div>
+    <div class="add-row">
+      <button type="button" class="add-button">Add Symptom<span class="circle"><i class="fa-solid fa-plus" aria-hidden="true"></i></span></button>
+    </div>
+  </fieldset>
+
+  <fieldset class="section">
+    <legend class="section-head">
+      <h2>Time of Day</h2>
+      <span class="hint">Select the time symptoms occurred.</span>
+    </legend>
+    <div class="option-grid">
+      <label class="option"><input type="checkbox" name="time" value="morning"><span>
+        <!-- No free Font Awesome "sunrise"; swap for fa-sunrise with the Pro kit -->
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 13h14M4 13a4 4 0 0 1 8 0M8 1v4M6 3l2-2 2 2M2.5 8.5l1 .8M13.5 8.5l-1 .8"/></svg>
+        Morning</span></label>
+      <label class="option"><input type="checkbox" name="time" value="afternoon"><span><i class="fa-regular fa-sun" aria-hidden="true"></i>Afternoon</span></label>
+      <label class="option"><input type="checkbox" name="time" value="evening"><span>
+        <!-- No free Font Awesome "sunset"; swap for fa-sunset with the Pro kit -->
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 13h14M4 13a4 4 0 0 1 8 0M8 1v4M6 3l2 2 2-2M2.5 8.5l1 .8M13.5 8.5l-1 .8"/></svg>
+        Evening</span></label>
+      <label class="option"><input type="checkbox" name="time" value="night"><span><i class="fa-regular fa-moon" aria-hidden="true"></i>Night</span></label>
+    </div>
+  </fieldset>
+
+  <fieldset class="section">
+    <legend class="section-head">
+      <h2>Triggers</h2>
+      <span class="hint">Select all that apply.</span>
+    </legend>
+    <div class="option-list">
+      <label class="option"><input type="checkbox" name="triggers" value="poor-air-quality"><span>Poor Air Quality</span></label>
+      <label class="option"><input type="checkbox" name="triggers" value="illness"><span>Illness</span></label>
+      <label class="option"><input type="checkbox" name="triggers" value="pollen"><span>Pollen</span></label>
+      <label class="option"><input type="checkbox" name="triggers" value="exercise"><span>Exercise</span></label>
+      <label class="option"><input type="checkbox" name="triggers" value="pet"><span>Pet</span></label>
+    </div>
+    <div class="add-row">
+      <button type="button" class="add-button">Add Trigger<span class="circle"><i class="fa-solid fa-plus" aria-hidden="true"></i></span></button>
+    </div>
+  </fieldset>
+
+  <fieldset class="section">
+    <legend class="section-head">
+      <h2>Care</h2>
+      <span class="hint">Have you visited the ER/urgent care within the last 24 hours?</span>
+    </legend>
+    <div class="option-grid">
+      <label class="option"><input type="radio" name="care" value="yes"><span><i class="fa-solid fa-check" aria-hidden="true"></i>Yes</span></label>
+      <label class="option"><input type="radio" name="care" value="no"><span><i class="fa-solid fa-ban" aria-hidden="true"></i>No</span></label>
+    </div>
+  </fieldset>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Notes</h2>
+      <p>Additional notes to discuss with your doctor.</p>
+    </div>
+    <button type="button" class="new-note">New Note<i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+  </section>
+
+  <footer class="page-footer">
+    <div class="placeholder" style="width: 180px; height: 28px;">Logo</div>
+    <div class="placeholder" style="width: 180px; height: 56px;">180 × 56</div>
+  </footer>
+</main>
+
+<div class="action-bar" id="actionBar" hidden>
+  <div class="action-bar-inner">
+    <button type="button" class="pill-button icon-only" id="clearCheckIn" aria-label="Clear check-in"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+    <button type="button" class="pill-button primary" id="logCheckIn">Log Check-In</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<dialog class="confirm-dialog" id="switchDialog" aria-labelledby="switchMessage">
+  <p id="switchMessage"></p>
+  <div class="confirm-actions">
+    <button type="button" class="pill-button" id="switchReturn"></button>
+    <button type="button" class="pill-button primary" id="switchContinue">Continue</button>
+  </div>
+</dialog>
+
+<!-- Design system: Bottom Nav (components/bottom-nav.*) -->
+<nav class="bottom-nav" id="bottomNav"></nav>
+
+<script src="components/user-selector.js"></script>
+<script src="components/zone-slider.js"></script>
+<script src="components/bottom-nav.js"></script>
+<script>
+  createBottomNav(document.getElementById("bottomNav"), { current: "check-in" });
+
+  const dateInput = document.getElementById("checkInDate");
+  const actionBar = document.getElementById("actionBar");
+  const toast = document.getElementById("toast");
+  // Symptom, time, trigger and care options (the date is handled separately)
+  const options = () => document.querySelectorAll('.check-in input[name]:is([type="checkbox"], [type="radio"])');
+
+  function todayString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  // Kept in sync by the slider's onChange; null means empty
+  let flowRate = null;
+
+  function readCheckIn() {
+    return {
+      flowRate,
+      date: dateInput.value,
+      checked: [...options()].filter((el) => el.checked).map((el) => `${el.name}:${el.value}`),
+    };
+  }
+
+  // Any answer, or a date other than today, counts as data
+  function hasData() {
+    const c = readCheckIn();
+    return c.flowRate !== null || c.checked.length > 0 || c.date !== todayString();
+  }
+
+  function refreshActions() {
+    const show = hasData();
+    actionBar.hidden = !show;
+    // The toast shares the action bar's spot; new input dismisses it
+    if (show) toast.hidden = true;
+    document.body.classList.toggle("has-actions", show);
+  }
+
+  function clearCheckIn() {
+    slider.value = null;
+    dateInput.value = todayString();
+    options().forEach((el) => { el.checked = false; });
+    refreshActions();
+  }
+
+  const slider = createZoneSlider(document.getElementById("flowRate"), {
+    onChange(v) {
+      flowRate = v;
+      refreshActions();
+    },
+  });
+  document.querySelector(".check-in").addEventListener("change", refreshActions);
+  dateInput.addEventListener("input", refreshActions);
+
+  // Logged check-ins, kept until the page is reloaded (stand-in for a real save)
+  const loggedCheckIns = [];
+
+  let toastTimer;
+  function showToast(message) {
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.hidden = true; }, 2500);
+  }
+
+  document.getElementById("clearCheckIn").addEventListener("click", clearCheckIn);
+  document.getElementById("logCheckIn").addEventListener("click", () => {
+    loggedCheckIns.push({ child: currentChild, ...readCheckIn(), loggedAt: new Date().toISOString() });
+    clearCheckIn();
+    showToast(`Check-in logged for ${currentChild}`);
+  });
+
+  // ---- Switching children: confirm before discarding an in-progress check-in ----
+  const CHILDREN = ["Avery", "Ben", "Cora"]; // Placeholder children until real profiles are wired up
+  const switchDialog = document.getElementById("switchDialog");
+  const switchReturn = document.getElementById("switchReturn");
+  let currentChild;
+  let pendingChild = null;
+  let reverting = false;
+
+  const selector = createUserSelector(document.getElementById("userTrack"), document.getElementById("userName"), CHILDREN, {
+    onChange(child) {
+      // The selector moving back after "Return to ..." isn't a new switch
+      if (reverting) {
+        reverting = false;
+        return;
+      }
+      if (!hasData()) {
+        currentChild = child;
+        return;
+      }
+      pendingChild = child;
+      document.getElementById("switchMessage").textContent =
+        `Switching users will cause you to lose your check-in data for ${currentChild}. Are you sure you want to proceed?`;
+      switchReturn.textContent = `Return to ${currentChild}`;
+      switchDialog.showModal();
+    },
+  });
+  currentChild = selector.selected;
+
+  function returnToCurrent() {
+    switchDialog.close();
+    reverting = true;
+    selector.select(CHILDREN.indexOf(currentChild));
+  }
+
+  switchReturn.addEventListener("click", returnToCurrent);
+  // Escape behaves like "Return to ..."
+  switchDialog.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    returnToCurrent();
+  });
+  document.getElementById("switchContinue").addEventListener("click", () => {
+    switchDialog.close();
+    currentChild = pendingChild;
+    clearCheckIn();
+  });
+
+  dateInput.value = todayString();
+  refreshActions();
+</script>
+
+</body>
+</html>

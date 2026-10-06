@@ -1,0 +1,187 @@
+/* Zone Slider: flow-rate readout circle + zoned range track. See zone-slider.js. */
+:root {
+  --red: #e5484d;
+  --orange: #f5a524;
+  --green: #30a46c;
+  --empty: #b5b5b5;
+  --thumb: 28px;
+  --track: 10px;
+}
+
+.zone-slider {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.readout-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  background: var(--zone-color);
+  color: #fff;
+  transition: background-color 0.15s;
+}
+
+.readout-circle:focus-within {
+  outline: 3px solid #6aa9ff;
+  outline-offset: 3px;
+}
+
+/* Typeable number field, styled to look like plain text inside the circle */
+.readout-value {
+  width: 100px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  caret-color: #fff;
+}
+
+.readout-value::placeholder {
+  color: #fff;
+  opacity: 1;
+}
+
+/* Lift the "__" placeholder off the label (text centers in the content box, so bottom padding raises it) */
+.readout-value:placeholder-shown {
+  box-sizing: border-box;
+  padding-bottom: 14px;
+}
+
+.readout-value:focus {
+  outline: none;
+}
+
+.readout-label {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+/* Track and ticks share this inset so they line up with the thumb's center */
+.rail {
+  position: relative;
+  margin: 0 calc(var(--thumb) / 2);
+}
+
+.track {
+  position: relative;
+  height: var(--track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.track .zones {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right,
+    var(--red) 0 var(--b1),
+    var(--orange) var(--b1) var(--b2),
+    var(--green) var(--b2) 100%);
+}
+
+/* Unfilled portion (right of the thumb) is shown faded */
+.track .unfilled {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: var(--pct);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+/* Native range input sits on top of the track for dragging + keyboard support */
+.zone-slider input[type="range"] {
+  position: absolute;
+  left: calc(var(--thumb) / -2);
+  top: calc(var(--track) / 2 - var(--thumb) / 2);
+  width: calc(100% + var(--thumb));
+  height: var(--thumb);
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.zone-slider input[type="range"]::-webkit-slider-runnable-track { background: transparent; height: var(--thumb); }
+.zone-slider input[type="range"]::-moz-range-track { background: transparent; }
+
+.zone-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #d0d0d0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.zone-slider input[type="range"]::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #d0d0d0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.zone-slider input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 3px solid #6aa9ff; outline-offset: 2px; }
+.zone-slider input[type="range"]:focus-visible::-moz-range-thumb { outline: 3px solid #6aa9ff; outline-offset: 2px; }
+
+.ticks {
+  position: relative;
+  height: 44px;
+  margin-top: 14px;
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #9a9a9a;
+  font-size: 16px;
+}
+
+.tick::before {
+  content: "";
+  width: 2px;
+  height: 10px;
+  margin-bottom: 6px;
+  background: #c8c8c8;
+  border-radius: 1px;
+}
+
+/* Minor markers: shorter, lighter tick with a smaller label */
+.tick.minor {
+  color: #c2c2c2;
+  font-size: 12px;
+}
+
+.tick.minor::before {
+  width: 1px;
+  height: 6px;
+  margin-bottom: 4px;
+  background: #dcdcdc;
+}

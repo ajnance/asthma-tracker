@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Selector</title>
+<link rel="stylesheet" href="components/user-selector.css">
+<style>
+  body {
+    margin: 0;
+    padding: 40px 16px;
+    font-family: "area-normal", "Area Normal", "Area", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fff;
+    color: #111;
+  }
+
+  /* Demo-only controls for previewing different user counts */
+  .demo {
+    max-width: 400px;
+    margin: 0 auto 40px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: #666;
+  }
+
+  .demo button {
+    font: inherit;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .demo button[aria-pressed="true"] {
+    background: #111;
+    border-color: #111;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="demo" id="demo" aria-label="Preview user count"></div>
+
+<div class="user-selector">
+  <div class="user-track" id="userTrack" role="radiogroup" aria-label="Select child"></div>
+  <div class="user-name" id="userName" aria-live="polite"></div>
+</div>
+
+<script src="components/user-selector.js"></script>
+<script>
+  const ALL_USERS = ["Avery", "Ben", "Cora", "Dylan", "Ella", "Finn", "Grace"];
+
+  // ---- Demo wiring ----
+  let track = document.getElementById("userTrack");
+  const nameEl = document.getElementById("userName");
+  const demo = document.getElementById("demo");
+  const COUNTS = [2, 3, 4, 5, 7];
+
+  function show(count) {
+    // Fresh element so listeners from the previous demo instance don't stack
+    const fresh = track.cloneNode(false);
+    track.replaceWith(fresh);
+    track = fresh;
+    createUserSelector(track, nameEl, ALL_USERS.slice(0, count));
+    demo.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.count) === count)));
+  }
+
+  COUNTS.forEach((c) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.count = c;
+    b.textContent = `${c} users`;
+    b.addEventListener("click", () => show(c));
+    demo.appendChild(b);
+  });
+
+  show(5);
+</script>
+
+</body>
+</html>

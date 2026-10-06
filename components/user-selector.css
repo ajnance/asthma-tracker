@@ -1,0 +1,60 @@
+/* User Selector: rotating carousel of child initials. See user-selector.js. */
+:root {
+  --circle: 75px;      /* selected circle size */
+  --gap-near: 72px;    /* center-to-center: selected -> neighbor */
+  --gap-far: 66px;     /* center-to-center: neighbor -> outer */
+}
+
+.user-selector {
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.user-track {
+  position: relative;
+  height: calc(var(--circle) + 8px);
+  touch-action: pan-y; /* horizontal drags rotate, vertical still scrolls the page */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.user-track.dragging {
+  cursor: grabbing;
+}
+
+.user {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--circle);
+  height: var(--circle);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  font: inherit;
+  font-size: 44px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  will-change: transform, opacity;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.user:focus-visible {
+  outline: 3px solid #6aa9ff;
+  outline-offset: 3px;
+}
+
+.user-name {
+  margin-top: 6px;
+  font-size: 20px;
+  min-height: 1.3em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .user { will-change: auto; }
+}

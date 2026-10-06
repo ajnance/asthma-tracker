@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bottom Nav</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="stylesheet" href="components/bottom-nav.css">
+<style>
+  body {
+    margin: 0;
+    padding: 40px 16px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    font-family: "area-normal", "Area Normal", "Area", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fff;
+    color: #111;
+  }
+</style>
+</head>
+<body>
+
+<nav class="bottom-nav" id="bottomNav"></nav>
+
+<script src="components/bottom-nav.js"></script>
+<script>
+  createBottomNav(document.getElementById("bottomNav"), { current: "check-in" });
+</script>
+
+</body>
+</html>
