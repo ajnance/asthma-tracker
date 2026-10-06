@@ -18,6 +18,9 @@ function createUserSelector(track, nameEl, users, { onChange } = {}) {
   // rot is a continuous "which user is centered" value; integers are resting positions
   let rot = 0;
   let anim = null;
+  // Last selection reported to onChange; compared against instead of rot,
+  // since a drag has already moved rot to the new user before it settles
+  let notifiedSel = 0;
 
   // Shrinks the whole row on screens too narrow for all visible slots
   let fit = 1;
@@ -100,10 +103,12 @@ function createUserSelector(track, nameEl, users, { onChange } = {}) {
     cancelAnimationFrame(anim);
     const from = rot;
     const dist = Math.abs(target - from);
-    const prevSel = selectedIndex();
     rot = target;
     syncSelection(); // update name + aria right away, then animate the visuals
-    if (selectedIndex() !== prevSel && onChange) onChange(users[selectedIndex()], selectedIndex());
+    if (selectedIndex() !== notifiedSel) {
+      notifiedSel = selectedIndex();
+      if (onChange) onChange(users[notifiedSel], notifiedSel);
+    }
 
     if (reduceMotion || dist === 0) {
       layout();
