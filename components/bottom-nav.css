@@ -1,0 +1,58 @@
+/* Bottom Nav: fixed tab bar at the bottom of the screen. See bottom-nav.js. */
+:root {
+  --bottom-nav-height: 56px; /* excludes the iPhone home-indicator inset; pages pad by this + env(safe-area-inset-bottom) */
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #f8f8f8;
+}
+
+.bottom-nav-items {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  max-width: 480px;
+  height: var(--bottom-nav-height);
+  margin: 0 auto;
+  padding: 4px 16px;
+  box-sizing: border-box;
+}
+
+.bottom-nav-item {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  border-radius: 4px;
+  color: #000;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item i {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.bottom-nav-item span {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.bottom-nav-item[aria-current="page"] {
+  background: #e2e2e2;
+}
+
+.bottom-nav-item:focus-visible {
+  outline: 3px solid #6aa9ff;
+  outline-offset: -3px;
+}
