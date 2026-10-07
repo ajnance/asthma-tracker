@@ -22,7 +22,7 @@ function createZoneSlider(root, { onChange } = {}) {
   root.innerHTML = `
     <div class="readout">
       <div class="readout-circle">
-        <input class="readout-value" id="${id}-readout" type="text" placeholder="__" inputmode="numeric" maxlength="3" autocomplete="off" aria-labelledby="${id}-label">
+        <input class="readout-value" id="${id}-readout" type="text" inputmode="numeric" maxlength="3" autocomplete="off" aria-labelledby="${id}-label">
         <label class="readout-label" id="${id}-label" for="${id}-readout">Flow Rate</label>
       </div>
     </div>
@@ -60,7 +60,7 @@ function createZoneSlider(root, { onChange } = {}) {
   function update({ syncReadout = true } = {}) {
     const v = Number(input.value);
     if (onChange) onChange(v === MIN ? null : v);
-    // 0 is the empty / starting state: gray circle, "__" placeholder
+    // 0 is the empty / starting state: gray circle, blank number box
     if (v === MIN) {
       root.style.setProperty("--pct", "0%");
       root.style.setProperty("--zone-color", "var(--empty)");

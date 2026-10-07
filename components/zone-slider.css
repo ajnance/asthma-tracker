@@ -26,8 +26,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 125px;
-  height: 125px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   background: var(--zone-color);
   color: #fff;
@@ -41,11 +41,15 @@
 
 /* Typeable number field, styled to look like plain text inside the circle */
 .readout-value {
-  width: 100px;
+  box-sizing: border-box;
+  width: 108px; /* 3 digits at 48px are ~98px; leaves a little room inside the tint */
   height: 48px;
-  padding: 0;
+  margin-bottom: 4px;
+  padding: 0 4px;
   border: 0;
-  background: transparent;
+  border-radius: 8px;
+  /* White wash over the circle reads as a lighter shade of whatever zone color is showing */
+  background: rgba(255, 255, 255, 0.22);
   color: inherit;
   font: inherit;
   font-size: 48px;
@@ -55,19 +59,9 @@
   caret-color: #fff;
 }
 
-.readout-value::placeholder {
-  color: #fff;
-  opacity: 1;
-}
-
-/* Lift the "__" placeholder off the label (text centers in the content box, so bottom padding raises it) */
-.readout-value:placeholder-shown {
-  box-sizing: border-box;
-  padding-bottom: 14px;
-}
-
 .readout-value:focus {
   outline: none;
+  background: rgba(255, 255, 255, 0.32);
 }
 
 .readout-label {
